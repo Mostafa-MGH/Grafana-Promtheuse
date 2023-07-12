@@ -20,6 +20,42 @@ services:
     ports:
       - '9090:9090'
 ####################################################################################
+  grafana-prom:
+    image: 'grafana/grafana:latest'
+    container_name: grafana-prom
+    volumes:
+      - 'grafana_data:/var/lib/grafana'
+      #- './grafana/dashboards/:/etc/grafana/dashboards'
+      - './grafana/provisioning/:/etc/grafana/provisioning/'
+    environment:
+      - 'GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}'
+      - 'GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}'
+      - 'GF_USERS_ALLOW_SIGN_UP=false'
+#      - 'GF_INSTALL_PLUGINS=grafana-piechart-panel,alexanderzobnin-zabbix-app'
+    restart: always
+#    networks:
+#      testlab:
+#        ipv4_address: 10.0.0.40
+    network_mode: host
+    expose:
+      - 3000
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus
+####################################################################################
+  alertmanager:
+    image: 'prom/alertmanager:latest'
+    container_name: alertmanage
+    restart: always
+    network_mode: host
+    ports:
+      - 9093:9093
+    volumes:
+      - "/root/alertmanager:/config"
+      - 'alertmanager-data:/data'
+    command: --config.file=/config/alertmanager.yml --log.level=debug
+####################################################################################
   node-exporter:
     image: 'prom/node-exporter:latest'
     container_name: node-exporter
@@ -58,45 +94,21 @@ services:
     ports:
       - '9115:9115'
 ####################################################################################
-  grafana-prom:
-    image: 'grafana/grafana:latest'
-    container_name: grafana-prom
-    volumes:
-      - 'grafana_data:/var/lib/grafana'
-      #- './grafana/dashboards/:/etc/grafana/dashboards'
-      - './grafana/provisioning/:/etc/grafana/provisioning/'
-    environment:
-      - 'GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}'
-      - 'GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}'
-      - 'GF_USERS_ALLOW_SIGN_UP=false'
-      - 'GF_INSTALL_PLUGINS=grafana-piechart-panel,alexanderzobnin-zabbix-app'
-    restart: always
-#    networks:
-#      testlab:
-#        ipv4_address: 10.0.0.40
-    network_mode: host
-    expose:
-      - 3000
-    ports:
-      - '3000:3000'
-    depends_on:
-      - prometheus
-####################################################################################
-  ipmi-exporter:
-    image: 'valdis932/ipmi-exporter:latest'
-    container_name: ipmi-exporter
-    volumes:
-      - './prometheus/ipmi-exporter/ipmi.yml:/etc/ipmi-exporter/ipmi.yml'
-    environment: []
-    restart: always
-    network_mode: host
-    expose:
-      - 9290
-    ports:
-      - '9290:9290'
-#    networks:
-#      testlab:
-#        ipv4_address: 10.0.0.50
+#  ipmi-exporter:
+#    image: 'valdis932/ipmi-exporter:latest'
+#    container_name: ipmi-exporter
+#    volumes:
+#      - './prometheus/ipmi-exporter/ipmi.yml:/etc/ipmi-exporter/ipmi.yml'
+#    environment: []
+#    restart: always
+#    network_mode: host
+#    expose:
+#      - 9290
+#    ports:
+#      - '9290:9290'
+##    networks:
+##      testlab:
+##        ipv4_address: 10.0.0.50
 ####################################################################################
   snmp-exporter:
     image: 'prom/snmp-exporter:latest'
@@ -115,22 +127,19 @@ services:
     ports:
       - '9116:9116'
 ####################################################################################
-  mikrotik-exporter:
-    image: 'nshttpd/mikrotik-exporter:1.0.12-DEVEL'
-    container_name: mikrotik-exporter
-    restart: always
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
     volumes:
-      - './prometheus/mikrotik-exporter/mikrotik.yml:/app/mikrotik.yml'
-    environment:
-      - CONFIG_FILE=/app/mikrotik.yml
-#    networks:
-#      testlab:
-#        ipv4_address: 10.0.0.70
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /dev/disk/:/dev/disk:ro
+    restart: always
     network_mode: host
-    expose:
-      - 9436
     ports:
-      - '9436:9436'
+      - '8080:8080'
 ####################################################################################
 #networks:
 #  testlab:
@@ -141,3 +150,5 @@ services:
 volumes:
   prometheus_data: {}
   grafana_data: {}
+  alertmanager-data: {}
+
