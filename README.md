@@ -1,1 +1,9 @@
-Prometheus + BlackBox + Node Exporter + Grafana + IPMI Exporter + SNMP Exporter (cisco and synology) + MIKROTIK Exporter
+Config & Installation 
+Prometheus 
+Grafana
+BlackBox Exporter
+Node Exporter
+IPMI Exporter
+SNMP Exporter
+MIKROTIK Exporter
+
